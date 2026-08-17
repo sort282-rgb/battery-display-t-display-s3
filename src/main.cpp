@@ -9,7 +9,7 @@
 #include <Arduino_GFX_Library.h>
 #include <lvgl.h>
 
-static constexpr const char* FW_VERSION = "12.2 CLIENT";
+static constexpr const char* FW_VERSION = "12.3 CLIENT";
 // Client builds contain no Wi-Fi credentials. They live only in protected
 // NVS and can be changed from the phone setup page.
 static constexpr const char* FACTORY_WIFI_SSID = "";
@@ -132,6 +132,10 @@ struct CellMonitorData {
 lv_obj_t *page4;
 lv_obj_t *evTitle, *evRow1, *evRow2, *evRow3, *evRow4, *evSummary;
 
+lv_obj_t *page5;
+lv_obj_t *eventLogTitle, *eventLogCount;
+lv_obj_t *eventLogRows[10];
+
 lv_obj_t *servicePage;
 lv_obj_t *serviceTitle, *serviceInfo, *serviceFooter;
 lv_obj_t *socBadge2, *socBadge3, *socBadge4;
@@ -142,7 +146,7 @@ struct EventItem {
   String message;
   int count=0;
 };
-EventItem ev[8];
+EventItem ev[10];
 int evCount=0;
 bool eventsFresh=false;
 uint32_t lastEventsFetch=0;
@@ -454,7 +458,7 @@ void handleControlClient(){
     int newPage=queryValue(request,"page").toInt();
     int newTheme=queryValue(request,"theme").toInt();
     bool newBadge=queryValue(request,"socbadge")=="1";
-    if(brightPercent<20 || brightPercent>100 || newPage<0 || newPage>3 || newTheme<0 || newTheme>3){
+    if(brightPercent<20 || brightPercent>100 || newPage<0 || newPage>4 || newTheme<0 || newTheme>3){
       saveError=true;
     } else {
       uint8_t newBrightness=(uint16_t)brightPercent*255/100;
@@ -492,8 +496,8 @@ void handleControlClient(){
   html+="<form class='card' action='/settings' method='get'><h2>Display settings</h2>";
   html+="<label>Brightness: <b id='bv'>"+String(brightPercent)+"%</b></label><input name='brightness' type='range' min='20' max='100' value='"+String(brightPercent)+"' oninput=\"bv.textContent=this.value+'%'\">";
   html+="<label>Start screen</label><select name='page'>";
-  const char* pages[]={"Dashboard","Battery capacity","Cell graph","System status"};
-  for(int i=0;i<4;i++) html+="<option value='"+String(i)+"'"+String(page==i?" selected":"")+">"+String(pages[i])+"</option>";
+  const char* pages[]={"Dashboard","Battery capacity","Cell graph","System status","Event log"};
+  for(int i=0;i<5;i++) html+="<option value='"+String(i)+"'"+String(page==i?" selected":"")+">"+String(pages[i])+"</option>";
   html+="</select><label>Color theme</label><select name='theme'>";
   const char* themes[]={"Classic blue","Pure dark","Amber","Green instrument"};
   for(int i=0;i<4;i++) html+="<option value='"+String(i)+"'"+String(colorTheme==i?" selected":"")+">"+String(themes[i])+"</option>";
@@ -736,7 +740,7 @@ bool processEspNowEvent(const uint8_t* data,uint16_t len){
     else if(key==0xA9) total=(uint8_t)tlvUnsigned(&data[pos],n);
     pos+=n;
   }
-  if(index>=8 || (!name.length() && !message.length())) return false;
+  if(index>=10 || (!name.length() && !message.length())) return false;
   if(index==0){ evCount=0; for(auto &item:ev) item=EventItem(); }
   if(name.startsWith("EVENT_")) name.remove(0,6);
   ev[index].type=name;
@@ -744,7 +748,7 @@ bool processEspNowEvent(const uint8_t* data,uint16_t len){
   ev[index].message=message;
   ev[index].count=count;
   evCount=max(evCount,(int)index+1);
-  if(total) evCount=min(evCount,min((int)total,8));
+  if(total) evCount=min(evCount,min((int)total,10));
   eventsFresh=true;
   lastEventsFetch=millis();
   return true;
@@ -1001,7 +1005,7 @@ Health health(){
 bool parseEventsPage(const String&h){
   evCount=0;
   int pos=0;
-  while(evCount<8){
+  while(evCount<10){
     int st=h.indexOf("<div class='event'",pos);
     if(st<0) break;
     int en=h.indexOf("</div></div>",st);
@@ -1320,6 +1324,39 @@ void buildEventsPage(){
   lv_obj_set_pos(socBadge4,269,34);
 }
 
+void buildEventLogPage(){
+  page5=lv_obj_create(lv_scr_act());
+  lv_obj_set_size(page5,320,170);
+  lv_obj_set_pos(page5,0,0);
+  lv_obj_clear_flag(page5,LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_style_bg_color(page5,COL_BG,0);
+  lv_obj_set_style_bg_opa(page5,LV_OPA_COVER,0);
+  lv_obj_set_style_border_width(page5,0,0);
+  lv_obj_set_style_pad_all(page5,0,0);
+
+  eventLogTitle=lv_label_create(page5);
+  lv_label_set_text(eventLogTitle,"EVENT LOG");
+  lv_obj_set_style_text_font(eventLogTitle,&lv_font_montserrat_18,0);
+  lv_obj_set_style_text_color(eventLogTitle,COL_CYAN,0);
+  lv_obj_set_pos(eventLogTitle,7,3);
+
+  eventLogCount=lv_label_create(page5);
+  lv_obj_set_width(eventLogCount,100);
+  lv_obj_set_style_text_font(eventLogCount,&lv_font_montserrat_12,0);
+  lv_obj_set_style_text_color(eventLogCount,COL_MUTED,0);
+  lv_obj_set_style_text_align(eventLogCount,LV_TEXT_ALIGN_RIGHT,0);
+  lv_obj_set_pos(eventLogCount,205,7);
+
+  for(int i=0;i<10;i++){
+    eventLogRows[i]=lv_label_create(page5);
+    lv_obj_set_size(eventLogRows[i],306,14);
+    lv_label_set_long_mode(eventLogRows[i],LV_LABEL_LONG_CLIP);
+    lv_obj_set_style_text_font(eventLogRows[i],&lv_font_montserrat_12,0);
+    lv_obj_set_style_text_color(eventLogRows[i],COL_GREEN,0);
+    lv_obj_set_pos(eventLogRows[i],7,25+i*14);
+  }
+}
+
 void buildServicePage(){
   servicePage=lv_obj_create(lv_scr_act());
   lv_obj_set_size(servicePage,320,170);
@@ -1390,12 +1427,14 @@ void buildUI(){
   buildSecondPage();
   buildCellPage();
   buildEventsPage();
+  buildEventLogPage();
   buildServicePage();
   buildAlert();
   buildHeartbeat();
   lv_obj_add_flag(page2,LV_OBJ_FLAG_HIDDEN);
   lv_obj_add_flag(page3,LV_OBJ_FLAG_HIDDEN);
   lv_obj_add_flag(page4,LV_OBJ_FLAG_HIDDEN);
+  lv_obj_add_flag(page5,LV_OBJ_FLAG_HIDDEN);
   lv_obj_add_flag(servicePage,LV_OBJ_FLAG_HIDDEN);
   lv_obj_add_flag(alertBox,LV_OBJ_FLAG_HIDDEN);
 }
@@ -1536,6 +1575,45 @@ void updateEventsPage(){
   }
 }
 
+void updateEventLogPage(){
+  char countText[20];
+  snprintf(countText,sizeof(countText),"LATEST %d/10",evCount);
+  lv_label_set_text(eventLogCount,eventsFresh?countText:"WAITING");
+
+  for(int i=0;i<10;i++){
+    if(i>=evCount){
+      lv_label_set_text(eventLogRows[i],i==0 && eventsFresh?"No events reported":"");
+      lv_obj_set_style_text_color(eventLogRows[i],COL_MUTED,0);
+      continue;
+    }
+
+    String sev=ev[i].severity;
+    sev.toUpperCase();
+    const char* tag="I";
+    lv_color_t color=COL_GREEN;
+    if(sev.indexOf("ERROR")>=0 || sev.indexOf("CRITICAL")>=0 || sev.indexOf("FATAL")>=0){
+      tag="E";
+      color=COL_RED;
+    } else if(sev.indexOf("WARN")>=0){
+      tag="W";
+      color=COL_ORANGE;
+    }
+
+    String text=ev[i].type;
+    if(text.startsWith("EVENT_")) text.remove(0,6);
+    if(!text.length()) text=ev[i].message;
+    text.trim();
+    if(ev[i].count>1) text += " x"+String(ev[i].count);
+    if(text.length()>37) text=text.substring(0,37);
+
+    char prefix[10];
+    snprintf(prefix,sizeof(prefix),"%02d %s  ",i+1,tag);
+    String line=String(prefix)+text;
+    lv_label_set_text(eventLogRows[i],line.c_str());
+    lv_obj_set_style_text_color(eventLogRows[i],color,0);
+  }
+}
+
 void updateServicePage(){
   if(configPortalActive){
     bool phoneConnected=WiFi.softAPgetStationNum()>0;
@@ -1601,6 +1679,7 @@ void updateView(){
     lv_obj_add_flag(page2,LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(page3,LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(page4,LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(page5,LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(alertBox,LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(servicePage,LV_OBJ_FLAG_HIDDEN);
     updateServicePage();
@@ -1612,6 +1691,7 @@ void updateView(){
     lv_obj_add_flag(page2,LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(page3,LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(page4,LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(page5,LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(alertBox,LV_OBJ_FLAG_HIDDEN);
 
     bool phoneConnected=configPortalActive && WiFi.softAPgetStationNum()>0;
@@ -1643,6 +1723,7 @@ void updateView(){
     lv_obj_add_flag(page2,LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(page3,LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(page4,LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(page5,LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(alertBox,LV_OBJ_FLAG_HIDDEN);
 
     lv_obj_set_style_bg_color(alertBox,lv_color_hex(0x181006),0);
@@ -1664,25 +1745,36 @@ void updateView(){
       lv_obj_add_flag(page2,LV_OBJ_FLAG_HIDDEN);
       lv_obj_add_flag(page3,LV_OBJ_FLAG_HIDDEN);
       lv_obj_add_flag(page4,LV_OBJ_FLAG_HIDDEN);
+      lv_obj_add_flag(page5,LV_OBJ_FLAG_HIDDEN);
       updateNormalLabels();
     } else if(page==1){
       lv_obj_add_flag(page1,LV_OBJ_FLAG_HIDDEN);
       lv_obj_clear_flag(page2,LV_OBJ_FLAG_HIDDEN);
       lv_obj_add_flag(page3,LV_OBJ_FLAG_HIDDEN);
       lv_obj_add_flag(page4,LV_OBJ_FLAG_HIDDEN);
+      lv_obj_add_flag(page5,LV_OBJ_FLAG_HIDDEN);
       updateNormalLabels();
     } else if(page==2) {
       lv_obj_add_flag(page1,LV_OBJ_FLAG_HIDDEN);
       lv_obj_add_flag(page2,LV_OBJ_FLAG_HIDDEN);
       lv_obj_clear_flag(page3,LV_OBJ_FLAG_HIDDEN);
       lv_obj_add_flag(page4,LV_OBJ_FLAG_HIDDEN);
+      lv_obj_add_flag(page5,LV_OBJ_FLAG_HIDDEN);
       updateCellPage();
-    } else {
+    } else if(page==3) {
       lv_obj_add_flag(page1,LV_OBJ_FLAG_HIDDEN);
       lv_obj_add_flag(page2,LV_OBJ_FLAG_HIDDEN);
       lv_obj_add_flag(page3,LV_OBJ_FLAG_HIDDEN);
       lv_obj_clear_flag(page4,LV_OBJ_FLAG_HIDDEN);
+      lv_obj_add_flag(page5,LV_OBJ_FLAG_HIDDEN);
       updateEventsPage();
+    } else {
+      lv_obj_add_flag(page1,LV_OBJ_FLAG_HIDDEN);
+      lv_obj_add_flag(page2,LV_OBJ_FLAG_HIDDEN);
+      lv_obj_add_flag(page3,LV_OBJ_FLAG_HIDDEN);
+      lv_obj_add_flag(page4,LV_OBJ_FLAG_HIDDEN);
+      lv_obj_clear_flag(page5,LV_OBJ_FLAG_HIDDEN);
+      updateEventLogPage();
     }
   }
 
@@ -1708,7 +1800,7 @@ void buttons(){
   }
 
   // Holding both buttons opens/closes diagnostics without adding another
-  // page to the normal four-page rotation.
+  // page to the normal five-page rotation.
   if(l==LOW && r==LOW){
     if(!bothPressedAt) bothPressedAt=millis();
     if(!bothLongHandled && millis()-bothPressedAt>=1800){
@@ -1760,13 +1852,13 @@ void buttons(){
   }
 
   if(prevL==HIGH && l==LOW && millis()-lastButton>150){
-    page = (page + 3) % 4;
+    page = (page + 4) % 5;
     lastButton=millis();
     saveSettings();
     changed=true;
   }
   if(prevR==HIGH && r==LOW && millis()-lastButton>150){
-    page = (page + 1) % 4;
+    page = (page + 1) % 5;
     lastButton=millis();
     saveSettings();
     changed=true;
@@ -1846,8 +1938,8 @@ void networkTask(void*){
         fetchCells();
         uiDirty=true;
       }
-      // The events page is intentionally fetched only while it is visible.
-      if((page==3 || serviceMode) && now-eventsAt>=5000){
+      // Events are fetched only while either events view or diagnostics is visible.
+      if((page==3 || page==4 || serviceMode) && now-eventsAt>=5000){
         eventsAt=now;
         fetchEvents();
         uiDirty=true;
@@ -1884,7 +1976,7 @@ void setup(){
   espNowChannel=preferences.getUChar("esp-channel",DEFAULT_ESPNOW_CHANNEL);
   if(espNowChannel<1 || espNowChannel>13) espNowChannel=DEFAULT_ESPNOW_CHANNEL;
   page=preferences.getUChar("page",0);
-  if(page>3) page=0;
+  if(page>4) page=0;
   brightness=preferences.getUChar("bright",DEFAULT_BRIGHTNESS);
   if(brightness<40) brightness=DEFAULT_BRIGHTNESS;
   colorTheme=preferences.getUChar("theme",0);
