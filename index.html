@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Battery Display — установка прошивки</title>
+  <style>
+    :root{color-scheme:dark;--bg:#071018;--line:#263848;--text:#f4f7fa;--muted:#9eb0bf;--green:#52e000;--cyan:#26d9ff;--orange:#ffb21a;--red:#ff6070}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -15%,#163249 0,var(--bg) 45%);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+    main{width:min(880px,calc(100% - 32px));margin:auto;padding:42px 0 54px}.brand{display:flex;gap:18px;align-items:center;margin-bottom:30px}.logo{width:62px;height:62px;border:2px solid var(--cyan);border-radius:17px;display:grid;place-items:center;color:var(--green);font-size:27px;box-shadow:0 0 28px #26d9ff22}.eyebrow{margin:0;color:var(--cyan);font-size:13px;letter-spacing:.14em;text-transform:uppercase}h1{margin:3px 0 0;font-size:clamp(27px,5vw,42px);line-height:1.1}h2{margin:0 0 8px;font-size:22px}p{margin:6px 0;color:var(--muted)}.version{display:inline-block;margin-top:11px;padding:4px 10px;border:1px solid #355165;border-radius:999px;color:#cce8f8;font-size:13px}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0}.step{background:#0a151e;border:1px solid var(--line);border-radius:12px;padding:15px}.num{color:var(--green);font-weight:800;margin-right:5px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:linear-gradient(150deg,#101e29,#0a131b);border:1px solid var(--line);border-radius:17px;padding:23px;box-shadow:0 12px 40px #0005}.recommended{border-color:#3e6a35}.tag{font-size:12px;color:var(--green);font-weight:800;text-transform:uppercase;letter-spacing:.08em}.danger{border-color:#5a4624}.danger .tag{color:var(--orange)}ul{padding-left:20px;color:var(--muted);min-height:78px}button{width:100%;border:0;border-radius:11px;padding:14px 16px;background:var(--green);color:#071018;font-weight:800;font-size:16px;cursor:pointer}.danger button{background:var(--orange)}button:hover:not(:disabled){filter:brightness(1.08)}button:disabled{cursor:wait;opacity:.48}
+    .progress-panel{display:none;margin:20px 0 0;padding:20px;background:#0a151e;border:1px solid #315064;border-radius:15px}.progress-panel.active{display:block}.progress-head{display:flex;justify-content:space-between;gap:16px;align-items:baseline;margin-bottom:9px}.progress-stage{font-weight:750;color:var(--text)}.progress-percent{font-size:23px;font-weight:850;color:var(--cyan);font-variant-numeric:tabular-nums}.track{height:18px;padding:3px;border:1px solid #36566d;border-radius:999px;background:#061018;overflow:hidden}.bar{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--cyan),var(--green));box-shadow:0 0 16px #26d9ff55;transition:width .16s linear}.progress-note{margin-top:9px;font-size:13px}.progress-panel.success{border-color:#46763a}.progress-panel.success .progress-percent{color:var(--green)}.progress-panel.error{border-color:#7d3540}.progress-panel.error .progress-percent,.progress-panel.error .progress-stage{color:var(--red)}
+    .unsupported{display:none;margin-top:18px;padding:12px;border-radius:9px;background:#3c1720;color:#ffd6dc}.help{margin-top:22px;padding:18px;border-left:3px solid var(--cyan);background:#0b1720;border-radius:5px 12px 12px 5px}.help strong{color:var(--text)}footer{margin-top:24px;color:#6f8494;font-size:13px;text-align:center}
+    @media(max-width:680px){main{padding-top:25px}.grid,.steps{grid-template-columns:1fr}.steps{gap:7px}.step{padding:11px}.brand{align-items:flex-start}.logo{width:52px;height:52px;flex:0 0 auto}}
+  </style>
+</head>
+<body>
+<main>
+  <section class="brand">
+    <div class="logo">⚡</div>
+    <div><p class="eyebrow">LILYGO T‑Display‑S3</p><h1>Battery Display Installer</h1><span class="version">Firmware 12.2 CLIENT</span></div>
+  </section>
+  <section class="steps" aria-label="Порядок установки">
+    <div class="step"><span class="num">1.</span> Подключите дисплей USB‑кабелем</div>
+    <div class="step"><span class="num">2.</span> Нажмите кнопку установки</div>
+    <div class="step"><span class="num">3.</span> Выберите USB Serial / COM‑порт</div>
+  </section>
+  <section class="grid">
+    <article class="card recommended">
+      <div class="tag">Рекомендуется</div><h2>Обновить прошивку</h2><p>Для уже настроенного дисплея.</p>
+      <ul><li>Сохраняет Wi‑Fi и ESP‑NOW</li><li>Сохраняет яркость и выбранный экран</li></ul>
+      <button id="update-button" type="button">Подключить и обновить</button>
+    </article>
+    <article class="card danger">
+      <div class="tag">Полный сброс</div><h2>Заводская установка</h2><p>Для нового дисплея или восстановления.</p>
+      <ul><li>Полностью очищает прежние настройки</li><li>После запуска настройте связь с телефона</li></ul>
+      <button id="factory-button" type="button">Очистить и установить</button>
+    </article>
+  </section>
+  <section id="progress-panel" class="progress-panel" aria-live="polite">
+    <div class="progress-head"><span id="progress-stage" class="progress-stage">Ожидание</span><span id="progress-percent" class="progress-percent">0%</span></div>
+    <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar" class="bar"></div></div>
+    <p id="progress-note" class="progress-note">Не отключайте USB и не нажимайте Reset во время записи.</p>
+  </section>
+  <div id="unsupported" class="unsupported">Откройте установщик на компьютере в Google Chrome или Microsoft Edge. Телефонные браузеры обычно не поддерживают запись через USB.</div>
+  <section class="help"><strong>Если порт не появился:</strong> отключите кабель, зажмите верхнюю кнопку BOOT, подключите кабель и отпустите кнопку. Затем снова нажмите установку. Во время записи не нажимайте Reset и не отключайте USB.</section>
+  <footer>Battery Display · клиентский установщик · ESP32‑S3</footer>
+</main>
+<script type="module">
+  import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.6.0/bundle.js";
+
+  const images = [
+    { url: "firmware/bootloader.bin", address: 0x0000 },
+    { url: "firmware/partitions.bin", address: 0x8000 },
+    { url: "firmware/boot_app0.bin", address: 0xE000 },
+    { url: "firmware/firmware.bin", address: 0x10000 }
+  ];
+  const updateButton = document.querySelector("#update-button");
+  const factoryButton = document.querySelector("#factory-button");
+  const panel = document.querySelector("#progress-panel");
+  const stage = document.querySelector("#progress-stage");
+  const percent = document.querySelector("#progress-percent");
+  const bar = document.querySelector("#progress-bar");
+  const note = document.querySelector("#progress-note");
+  const track = document.querySelector(".track");
+  let busy = false;
+
+  function setProgress(value, message, detail = "Не отключайте USB и не нажимайте Reset во время записи.") {
+    const safe = Math.max(0, Math.min(100, Math.round(value)));
+    panel.classList.add("active"); panel.classList.remove("success", "error");
+    stage.textContent = message; percent.textContent = `${safe}%`; bar.style.width = `${safe}%`;
+    track.setAttribute("aria-valuenow", String(safe)); note.textContent = detail;
+  }
+  function setBusy(value) { busy = value; updateButton.disabled = value; factoryButton.disabled = value; }
+
+  async function fetchImages() {
+    const files = [];
+    for (let index = 0; index < images.length; index += 1) {
+      setProgress(1 + index, `Подготовка файлов ${index + 1}/${images.length}`);
+      const response = await fetch(images[index].url, { cache: "no-store" });
+      if (!response.ok) throw new Error(`Не удалось загрузить ${images[index].url} (HTTP ${response.status})`);
+      const data = new Uint8Array(await response.arrayBuffer());
+      if (!data.length) throw new Error(`Файл ${images[index].url} пуст`);
+      files.push({ ...images[index], data, size: data.length });
+    }
+    return files;
+  }
+
+  const terminal = {
+    clean() {}, write() {},
+    writeLine(message) {
+      const text = String(message || "").toLowerCase();
+      if (text.includes("erase")) stage.textContent = "Очистка памяти дисплея";
+      if (text.includes("compressed")) stage.textContent = "Запись прошивки";
+    }
+  };
+
+  async function install(eraseAll) {
+    if (busy) return;
+    if (eraseAll && !window.confirm("Заводская установка удалит Wi‑Fi, ESP‑NOW и все настройки дисплея. Продолжить?")) return;
+    if (!("serial" in navigator)) { document.querySelector("#unsupported").style.display = "block"; return; }
+    let transport;
+    setBusy(true);
+    setProgress(0, "Выберите USB Serial / COM‑порт", "В открывшемся окне выберите дисплей и нажмите «Подключение».");
+    try {
+      const port = await navigator.serial.requestPort();
+      setProgress(1, "Подключение к дисплею");
+      transport = new Transport(port, true);
+      const loader = new ESPLoader({ transport, baudrate: 460800, terminal, debugLogging: false });
+      const chip = await loader.main();
+      if (chip && !String(chip).toUpperCase().includes("ESP32-S3")) throw new Error(`Выбрано устройство ${chip}, требуется ESP32-S3`);
+
+      const files = await fetchImages();
+      const rawTotal = files.reduce((sum, file) => sum + file.size, 0);
+      const completedBefore = files.map((_, index) => files.slice(0, index).reduce((sum, file) => sum + file.size, 0));
+      setProgress(5, eraseAll ? "Очистка памяти дисплея" : "Начало записи");
+      await loader.writeFlash({
+        fileArray: files.map(file => ({ data: file.data, address: file.address })),
+        flashMode: "keep", flashFreq: "keep", flashSize: "keep", eraseAll, compress: true,
+        reportProgress(fileIndex, written, total) {
+          const file = files[fileIndex];
+          const fraction = total > 0 ? Math.min(1, written / total) : 0;
+          const equivalent = completedBefore[fileIndex] + file.size * fraction;
+          setProgress(5 + (equivalent / rawTotal) * 93, `Запись прошивки · файл ${fileIndex + 1}/${files.length}`);
+        }
+      });
+      setProgress(99, "Перезапуск дисплея", "Запись завершена. Дисплей сейчас перезапустится.");
+      await loader.after("hard_reset");
+      try { await transport.disconnect(); } catch (_) {}
+      transport = undefined;
+      setProgress(100, "Готово", "Прошивка успешно установлена. USB можно отключить.");
+      panel.classList.add("success");
+    } catch (error) {
+      const cancelled = error && (error.name === "NotFoundError" || error.name === "AbortError");
+      setProgress(0, cancelled ? "Выбор порта отменён" : "Ошибка установки", cancelled ? "Нажмите кнопку установки и выберите порт ещё раз." : String(error?.message || error));
+      panel.classList.add("error");
+    } finally {
+      if (transport) { try { await transport.disconnect(); } catch (_) {} }
+      setBusy(false);
+    }
+  }
+  updateButton.addEventListener("click", () => install(false));
+  factoryButton.addEventListener("click", () => install(true));
+</script>
+</body>
+</html>
