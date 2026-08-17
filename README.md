@@ -1,6 +1,6 @@
 # Battery Display for LILYGO T-Display-S3
 
-An independent wireless dashboard for the [Battery Emulator](https://github.com/dalathegreat/Battery-Emulator), built for the LILYGO T-Display-S3. It receives live data over ESP-NOW and presents the most useful battery information on four compact screens.
+An independent wireless dashboard for the [Battery Emulator](https://github.com/dalathegreat/Battery-Emulator), built for the LILYGO T-Display-S3. It receives live data over ESP-NOW and presents the most useful battery information on five compact screens.
 
 [**Install firmware in Chrome or Edge**](https://sort282-rgb.github.io/battery-display-t-display-s3/) · [**Open the project Wiki**](https://github.com/sort282-rgb/battery-display-t-display-s3/wiki)
 
@@ -19,7 +19,7 @@ An independent wireless dashboard for the [Battery Emulator](https://github.com/
 ## Features
 
 - Direct ESP-NOW connection — no router is required
-- Four switchable information screens
+- Five switchable information screens
 - SOC, power, current, pack voltage and temperature
 - Minimum and maximum cell voltage, cell numbers and delta
 - Remaining and total energy information
@@ -27,6 +27,7 @@ An independent wireless dashboard for the [Battery Emulator](https://github.com/
 - Web control for brightness, start screen, theme and SOC badge
 - Settings preserved during normal firmware updates
 - Connection and battery-status diagnostics
+- Event log showing the latest 10 ESP-NOW events with severity colors
 - USB web installer with stage, percentage and progress bar
 
 ## Install the firmware
@@ -77,5 +78,4 @@ See the [Wiki](https://github.com/sort282-rgb/battery-display-t-display-s3/wiki)
 
 ## Version
 
-Firmware 12.2 CLIENT
-
+Firmware 12.3 CLIENT

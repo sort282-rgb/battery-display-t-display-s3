@@ -1,6 +1,6 @@
 {
   "name": "Battery Display",
-  "version": "12.2",
+  "version": "12.3",
   "new_install_prompt_erase": false,
   "builds": [
     {
