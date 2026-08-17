@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Battery Display — установка прошивки</title>
+  <title>Battery Display — Firmware Installer</title>
   <style>
     :root{color-scheme:dark;--bg:#071018;--line:#263848;--text:#f4f7fa;--muted:#9eb0bf;--green:#52e000;--cyan:#26d9ff;--orange:#ffb21a;--red:#ff6070}
     *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -15%,#163249 0,var(--bg) 45%);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
@@ -20,31 +20,31 @@
     <div class="logo">⚡</div>
     <div><p class="eyebrow">LILYGO T‑Display‑S3</p><h1>Battery Display Installer</h1><span class="version">Firmware 12.2 CLIENT</span></div>
   </section>
-  <section class="steps" aria-label="Порядок установки">
-    <div class="step"><span class="num">1.</span> Подключите дисплей USB‑кабелем</div>
-    <div class="step"><span class="num">2.</span> Нажмите кнопку установки</div>
-    <div class="step"><span class="num">3.</span> Выберите USB Serial / COM‑порт</div>
+  <section class="steps" aria-label="Installation steps">
+    <div class="step"><span class="num">1.</span> Connect the display with a USB cable</div>
+    <div class="step"><span class="num">2.</span> Click an installation button</div>
+    <div class="step"><span class="num">3.</span> Select the USB Serial / COM port</div>
   </section>
   <section class="grid">
     <article class="card recommended">
-      <div class="tag">Рекомендуется</div><h2>Обновить прошивку</h2><p>Для уже настроенного дисплея.</p>
-      <ul><li>Сохраняет Wi‑Fi и ESP‑NOW</li><li>Сохраняет яркость и выбранный экран</li></ul>
-      <button id="update-button" type="button">Подключить и обновить</button>
+      <div class="tag">Recommended</div><h2>Update firmware</h2><p>For an already configured display.</p>
+      <ul><li>Keeps Wi‑Fi and ESP‑NOW settings</li><li>Keeps brightness and the selected screen</li></ul>
+      <button id="update-button" type="button">Connect and update</button>
     </article>
     <article class="card danger">
-      <div class="tag">Полный сброс</div><h2>Заводская установка</h2><p>Для нового дисплея или восстановления.</p>
-      <ul><li>Полностью очищает прежние настройки</li><li>После запуска настройте связь с телефона</li></ul>
-      <button id="factory-button" type="button">Очистить и установить</button>
+      <div class="tag">Full reset</div><h2>Factory installation</h2><p>For a new display or recovery.</p>
+      <ul><li>Completely erases previous settings</li><li>Configure the connection from your phone after startup</li></ul>
+      <button id="factory-button" type="button">Erase and install</button>
     </article>
   </section>
   <section id="progress-panel" class="progress-panel" aria-live="polite">
-    <div class="progress-head"><span id="progress-stage" class="progress-stage">Ожидание</span><span id="progress-percent" class="progress-percent">0%</span></div>
+    <div class="progress-head"><span id="progress-stage" class="progress-stage">Waiting</span><span id="progress-percent" class="progress-percent">0%</span></div>
     <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar" class="bar"></div></div>
-    <p id="progress-note" class="progress-note">Не отключайте USB и не нажимайте Reset во время записи.</p>
+    <p id="progress-note" class="progress-note">Do not disconnect USB or press Reset while flashing.</p>
   </section>
-  <div id="unsupported" class="unsupported">Откройте установщик на компьютере в Google Chrome или Microsoft Edge. Телефонные браузеры обычно не поддерживают запись через USB.</div>
-  <section class="help"><strong>Если порт не появился:</strong> отключите кабель, зажмите верхнюю кнопку BOOT, подключите кабель и отпустите кнопку. Затем снова нажмите установку. Во время записи не нажимайте Reset и не отключайте USB.</section>
-  <footer>Battery Display · клиентский установщик · ESP32‑S3</footer>
+  <div id="unsupported" class="unsupported">Open this installer on a computer in Google Chrome or Microsoft Edge. Mobile browsers generally cannot flash the display over USB.</div>
+  <section class="help"><strong>If the port does not appear:</strong> disconnect the cable, hold the upper BOOT button, reconnect the cable, and release the button. Then start the installation again. Do not press Reset or disconnect USB while flashing.</section>
+  <footer>Battery Display · Web Installer · ESP32‑S3</footer>
 </main>
 <script type="module">
   import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.6.0/bundle.js";
@@ -65,7 +65,7 @@
   const track = document.querySelector(".track");
   let busy = false;
 
-  function setProgress(value, message, detail = "Не отключайте USB и не нажимайте Reset во время записи.") {
+  function setProgress(value, message, detail = "Do not disconnect USB or press Reset while flashing.") {
     const safe = Math.max(0, Math.min(100, Math.round(value)));
     panel.classList.add("active"); panel.classList.remove("success", "error");
     stage.textContent = message; percent.textContent = `${safe}%`; bar.style.width = `${safe}%`;
@@ -76,11 +76,11 @@
   async function fetchImages() {
     const files = [];
     for (let index = 0; index < images.length; index += 1) {
-      setProgress(1 + index, `Подготовка файлов ${index + 1}/${images.length}`);
+      setProgress(1 + index, `Preparing files ${index + 1}/${images.length}`);
       const response = await fetch(images[index].url, { cache: "no-store" });
-      if (!response.ok) throw new Error(`Не удалось загрузить ${images[index].url} (HTTP ${response.status})`);
+      if (!response.ok) throw new Error(`Unable to download ${images[index].url} (HTTP ${response.status})`);
       const data = new Uint8Array(await response.arrayBuffer());
-      if (!data.length) throw new Error(`Файл ${images[index].url} пуст`);
+      if (!data.length) throw new Error(`File ${images[index].url} is empty`);
       files.push({ ...images[index], data, size: data.length });
     }
     return files;
@@ -90,30 +90,30 @@
     clean() {}, write() {},
     writeLine(message) {
       const text = String(message || "").toLowerCase();
-      if (text.includes("erase")) stage.textContent = "Очистка памяти дисплея";
-      if (text.includes("compressed")) stage.textContent = "Запись прошивки";
+      if (text.includes("erase")) stage.textContent = "Erasing display memory";
+      if (text.includes("compressed")) stage.textContent = "Flashing firmware";
     }
   };
 
   async function install(eraseAll) {
     if (busy) return;
-    if (eraseAll && !window.confirm("Заводская установка удалит Wi‑Fi, ESP‑NOW и все настройки дисплея. Продолжить?")) return;
+    if (eraseAll && !window.confirm("Factory installation will erase Wi‑Fi, ESP‑NOW, and all display settings. Continue?")) return;
     if (!("serial" in navigator)) { document.querySelector("#unsupported").style.display = "block"; return; }
     let transport;
     setBusy(true);
-    setProgress(0, "Выберите USB Serial / COM‑порт", "В открывшемся окне выберите дисплей и нажмите «Подключение».");
+    setProgress(0, "Select the USB Serial / COM port", "Choose the display in the dialog and click Connect.");
     try {
       const port = await navigator.serial.requestPort();
-      setProgress(1, "Подключение к дисплею");
+      setProgress(1, "Connecting to the display");
       transport = new Transport(port, true);
       const loader = new ESPLoader({ transport, baudrate: 460800, terminal, debugLogging: false });
       const chip = await loader.main();
-      if (chip && !String(chip).toUpperCase().includes("ESP32-S3")) throw new Error(`Выбрано устройство ${chip}, требуется ESP32-S3`);
+      if (chip && !String(chip).toUpperCase().includes("ESP32-S3")) throw new Error(`Selected device is ${chip}; ESP32-S3 is required`);
 
       const files = await fetchImages();
       const rawTotal = files.reduce((sum, file) => sum + file.size, 0);
       const completedBefore = files.map((_, index) => files.slice(0, index).reduce((sum, file) => sum + file.size, 0));
-      setProgress(5, eraseAll ? "Очистка памяти дисплея" : "Начало записи");
+      setProgress(5, eraseAll ? "Erasing display memory" : "Starting firmware flash");
       await loader.writeFlash({
         fileArray: files.map(file => ({ data: file.data, address: file.address })),
         flashMode: "keep", flashFreq: "keep", flashSize: "keep", eraseAll, compress: true,
@@ -121,18 +121,18 @@
           const file = files[fileIndex];
           const fraction = total > 0 ? Math.min(1, written / total) : 0;
           const equivalent = completedBefore[fileIndex] + file.size * fraction;
-          setProgress(5 + (equivalent / rawTotal) * 93, `Запись прошивки · файл ${fileIndex + 1}/${files.length}`);
+          setProgress(5 + (equivalent / rawTotal) * 93, `Flashing firmware · file ${fileIndex + 1}/${files.length}`);
         }
       });
-      setProgress(99, "Перезапуск дисплея", "Запись завершена. Дисплей сейчас перезапустится.");
+      setProgress(99, "Restarting the display", "Flashing is complete. The display will restart now.");
       await loader.after("hard_reset");
       try { await transport.disconnect(); } catch (_) {}
       transport = undefined;
-      setProgress(100, "Готово", "Прошивка успешно установлена. USB можно отключить.");
+      setProgress(100, "Complete", "Firmware installed successfully. You may disconnect USB.");
       panel.classList.add("success");
     } catch (error) {
       const cancelled = error && (error.name === "NotFoundError" || error.name === "AbortError");
-      setProgress(0, cancelled ? "Выбор порта отменён" : "Ошибка установки", cancelled ? "Нажмите кнопку установки и выберите порт ещё раз." : String(error?.message || error));
+      setProgress(0, cancelled ? "Port selection cancelled" : "Installation error", cancelled ? "Click an installation button and select the port again." : String(error?.message || error));
       panel.classList.add("error");
     } finally {
       if (transport) { try { await transport.disconnect(); } catch (_) {} }
