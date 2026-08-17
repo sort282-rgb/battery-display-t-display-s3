@@ -10,11 +10,11 @@ An independent wireless dashboard for the [Battery Emulator](https://github.com/
 
 | Main dashboard | Capacity and cell data |
 | --- | --- |
-| ![Main Battery Emulator dashboard](docs/images/dashboard.jpg) | ![Capacity and cell information](docs/images/capacity.jpg) |
+| ![Main Battery Emulator dashboard](docs/images/dashboard-cropped.jpg) | ![Capacity and cell information](docs/images/capacity-cropped.jpg) |
 
 | System diagnostics | Cell-voltage graph |
 | --- | --- |
-| ![System status and connection diagnostics](docs/images/system-status.jpg) | ![Cell-voltage graph with minimum, maximum and delta](docs/images/cell-graph.jpg) |
+| ![System status and connection diagnostics](docs/images/system-status-cropped.jpg) | ![Cell-voltage graph with minimum, maximum and delta](docs/images/cell-graph-cropped.jpg) |
 
 ## Features
 
@@ -53,6 +53,14 @@ The display changes to `PHONE CONNECTED` when the phone joins the setup network.
 - 320 × 170 color display
 - USB-C cable capable of data transfer
 
+## Where to buy
+
+- [LILYGO official store](https://lilygo.cc/products/t-display-s3)
+- [AliExpress — LILYGO T-Display-S3](https://www.aliexpress.com/wholesale?SearchText=LILYGO%20T-Display-S3)
+- [Amazon — LILYGO T-Display-S3](https://www.amazon.com/dp/B09J112YR7)
+
+Choose the 1.9-inch ST7789 T-Display-S3 and confirm the board variant with the seller before ordering.
+
 ## Build from source
 
 The project uses PlatformIO and the `lilygo-t-display-s3` environment.
@@ -70,3 +78,4 @@ See the [Wiki](https://github.com/sort282-rgb/battery-display-t-display-s3/wiki)
 ## Version
 
 Firmware 12.2 CLIENT
+
